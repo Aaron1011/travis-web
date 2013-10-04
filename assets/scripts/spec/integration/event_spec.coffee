@@ -35,6 +35,32 @@ test "event containing a repository, adds repository to repos list", ->
         row: 2
         item: { slug: 'travis-ci/travis-support',  build: { number: 4, url: '/travis-ci/travis-support/builds/10', duration: '1 min 30 sec', finishedAt: 'less than a minute ago' } }
 
+
+test "an event containing a created or requeued job", ->
+  beforeEach ->
+    payload =
+      job:
+        id: 12
+        repository_id: 1
+        number: '1.4'
+        queue: 'build.linux'
+
+  it "clears the job's log if the job was started", ->
+    visit('/travis-ci/travis-core/').then ->
+        Em.run ->
+          Travis.receive 'build:started', payload
+
+        wait().then ->
+          displaysLog ''
+  it "clears the job's log if the job was requeued", ->
+    visit('/travis-ci/travis-core').then ->
+      Em.run ->
+        Travis.receive 'build:requeued', payload
+
+      wait().then ->
+        displaysLog ''
+
+
 test "an event with a build adds a build to a builds list", ->
   visit('/travis-ci/travis-core/builds').then ->
     payload =
@@ -61,6 +87,7 @@ test "an event with a build adds a build to a builds list", ->
       listsBuild
         row: 1
         item: { id: 11, slug: 'travis-ci/travis-core', number: '3', sha: '1234567', branch: 'master', message: 'commit message 3', finishedAt: 'less than a minute ago', duration: '55 sec', color: 'red' }
+
 
 #test "event containing a job, adds job to jobs list", ->
 #  visit('travis-ci/travis-core').then ->
